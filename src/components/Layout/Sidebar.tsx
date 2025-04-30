@@ -4,8 +4,8 @@ import SearchResultItem from '@/components/Search/SearchResultItem';
 
 interface SidebarProps {
   searchQuery: string;
-  currentPDF: string | null;
-  setCurrentPDF: (pdf: string | null) => void;
+  currentPDF: File | null;
+  setCurrentPDF: (pdf: File | null) => void;
 }
 
 // Mock search result data
