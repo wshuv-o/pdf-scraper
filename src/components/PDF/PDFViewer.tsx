@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef } from "react";
-import { Document, Page } from "react-pdf";
+import { useState, useEffect } from "react";
 import PDFControls from "./PDFControls";
 import PDFThumbnails from "./PDFThumbnails";
 import {
@@ -11,40 +10,36 @@ import {
 } from "lucide-react";
 
 interface PDFViewerProps {
-  pdfFile: File; // Updated to accept a File object instead of a string
+  pdfFiles: File[]; // Accept an array of files
   searchQuery: string;
 }
 
-const PDFViewer = ({ pdfFile, searchQuery }: PDFViewerProps) => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(3);
-  const [zoom, setZoom] = useState(30);
+const PDFViewer = ({ pdfFiles, searchQuery }: PDFViewerProps) => {
+  const [zoom, setZoom] = useState(100);
   const [showThumbnails, setShowThumbnails] = useState(true);
+  const [currentPdfIndex, setCurrentPdfIndex] = useState(0); // Keep track of the current PDF index
   const [pdfFileUrl, setPdfFileUrl] = useState<string | null>(null);
 
-  // Create a URL for the uploaded PDF file
   useEffect(() => {
-    if (pdfFile) {
-      const objectUrl = URL.createObjectURL(pdfFile);
+    if (pdfFiles.length > 0) {
+      const objectUrl = URL.createObjectURL(pdfFiles[currentPdfIndex]); // Get URL for the selected PDF
       setPdfFileUrl(objectUrl);
 
       return () => {
-        // Cleanup the object URL when the component is unmounted
         if (objectUrl) {
           URL.revokeObjectURL(objectUrl);
         }
       };
     }
-  }, [pdfFile]);
-
-  const handlePageChange = (page: number) => {
-    if (page > 0 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  };
+  }, [pdfFiles, currentPdfIndex]);
 
   const handleZoomChange = (newZoom: number) => {
     setZoom(newZoom);
+  };
+
+  // Handle changing the current PDF (if multiple PDFs are provided)
+  const handlePdfChange = (index: number) => {
+    setCurrentPdfIndex(index);
   };
 
   return (
@@ -55,15 +50,15 @@ const PDFViewer = ({ pdfFile, searchQuery }: PDFViewerProps) => {
             <AlignJustify size={18} />
           </button>
           <span className="font-medium text-gray-300 text-sm truncate max-w-sm">
-            {pdfFile.name}
+            {pdfFiles[currentPdfIndex]?.name}
           </span>
         </div>
 
         <PDFControls
-          currentPage={currentPage}
-          totalPages={totalPages}
+          currentPage={1}
+          totalPages={1}
           zoom={zoom}
-          onPageChange={handlePageChange}
+          onPageChange={() => {}}
           onZoomChange={handleZoomChange}
         />
 
@@ -84,33 +79,42 @@ const PDFViewer = ({ pdfFile, searchQuery }: PDFViewerProps) => {
       </div>
 
       <div className="flex flex-1 overflow-hidden">
-        {showThumbnails && (
+        {/* {showThumbnails && (
           <PDFThumbnails
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
+            currentPage={1}
+            totalPages={1}
+            onPageChange={() => {}}
           />
-        )}
+        )} */}
 
         <div className="flex-1 flex justify-center items-start overflow-auto p-4 bg-gray-800">
           {pdfFileUrl ? (
-            <div className="relative" style={{ width: `${zoom}%` }}>
-              <Document
-                file={pdfFileUrl}
-                onLoadSuccess={({ numPages }) => setTotalPages(numPages)}
-              >
-                <Page pageNumber={currentPage} />
-              </Document>
-              <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center">
-                <div className="text-3xl text-gray-500">
-                  PDF Page {currentPage} of {totalPages}
-                </div>
-              </div>
-            </div>
+            <iframe
+              src={pdfFileUrl}
+              title="PDF Viewer"
+              className="w-full h-full border-0"
+              style={{
+                transform: `scale(${zoom / 100})`,
+                transformOrigin: "top left",
+              }}
+            />
           ) : (
             <div className="text-gray-500">Loading PDF...</div>
           )}
         </div>
+      </div>
+
+      {/* Optionally add navigation for multiple PDFs */}
+      <div className="flex justify-center gap-2 p-4">
+        {pdfFiles.map((pdf, index) => (
+          <button
+            key={index}
+            onClick={() => handlePdfChange(index)}
+            className="text-gray-300 hover:text-white"
+          >
+            {pdf.name}
+          </button>
+        ))}
       </div>
     </div>
   );

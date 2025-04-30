@@ -7,15 +7,16 @@ import PDFViewer from "@/components/PDF/PDFViewer";
 
 export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [currentPDF, setCurrentPDF] = useState<File | null>(null); // Change to File instead of string
+  const [uploadedPDFs, setUploadedPDFs] = useState<File[]>([]); // This should hold the array of PDFs
+  const [currentPDF, setCurrentPDF] = useState<File | null>(null); // Single file for current PDF view
   const [searchQuery, setSearchQuery] = useState<string>("Hello");
   const [darkMode, setDarkMode] = useState(true);
 
   // Function to handle setting the uploaded PDFs
   const handleSetUploadedPDFs = (pdfFiles: File[]) => {
+    setUploadedPDFs(pdfFiles); // Store all uploaded PDFs in the state
     if (pdfFiles.length > 0) {
-      // Set the first uploaded PDF as the current PDF to be displayed
-      setCurrentPDF(pdfFiles[0]);
+      setCurrentPDF(pdfFiles[0]); // Set the first PDF as the current PDF
     }
   };
 
@@ -37,15 +38,15 @@ export default function Home() {
         {sidebarOpen && (
           <Sidebar
             searchQuery={searchQuery}
-            currentPDF={currentPDF}
-            setCurrentPDF={setCurrentPDF}
+            uploadedPDFs={uploadedPDFs} // Pass the entire list of PDFs to Sidebar
+            setCurrentPDF={setCurrentPDF} // Pass the setter to Sidebar to update the selected PDF
           />
         )}
 
         <div className="flex-1 overflow-hidden">
-          {currentPDF ? (
+          {currentPDF ? ( // Check if a specific PDF is selected
             <PDFViewer
-              pdfFile={currentPDF} // Pass the whole file here
+              pdfFiles={uploadedPDFs} // Pass the entire list of uploaded PDFs
               searchQuery={searchQuery}
             />
           ) : (
